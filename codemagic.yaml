@@ -1,0 +1,26 @@
+workflows:
+  android-debug:
+    name: CetakStrukPPOB - APK
+    max_build_duration: 60
+
+    scripts:
+      - name: Ekstrak proyek
+        script: |
+          rm -rf _project
+          mkdir _project
+          unzip -q "CetakStrukPPOB_v1 (1).zip" -d _project
+
+      - name: Cari proyek Android
+        script: |
+          PROJECT_DIR="$(dirname "$(find _project -name settings.gradle.kts -o -name settings.gradle | head -n 1)")"
+          echo "Project ditemukan di: $PROJECT_DIR"
+          test -n "$PROJECT_DIR"
+
+      - name: Build APK
+        script: |
+          PROJECT_DIR="$(dirname "$(find _project -name settings.gradle.kts -o -name settings.gradle | head -n 1)")"
+          cd "$PROJECT_DIR"
+          gradle assembleDebug
+
+    artifacts:
+      - "**/app/build/outputs/apk/debug/*.apk"
