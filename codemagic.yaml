@@ -1,26 +1,50 @@
 workflows:
   android-debug:
-    name: CetakStrukPPOB - APK
+    name: CetakStrukPPOB V3 Share Receiver
     max_build_duration: 60
-
+    environment:
+      java: 17
     scripts:
-      - name: Ekstrak proyek
+      - name: Extract V3 project ZIP
         script: |
+          set -eu
           rm -rf _project
-          mkdir _project
-          unzip -q "CetakStrukPPOB_v1 (1).zip" -d _project
+          mkdir -p _project
 
-      - name: Cari proyek Android
-        script: |
-          PROJECT_DIR="$(dirname "$(find _project -name settings.gradle.kts -o -name settings.gradle | head -n 1)")"
-          echo "Project ditemukan di: $PROJECT_DIR"
-          test -n "$PROJECT_DIR"
+          ZIP_FILE="$(find . -maxdepth 1 -type f -iname 'CetakStrukPPOB_v3_ShareReceiver.zip' -print -quit || true)"
+          if [ -z "$ZIP_FILE" ]; then
+            ZIP_FILE="$(find . -maxdepth 1 -type f -iname '*.zip' -print -quit || true)"
+          fi
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "ERROR: Tidak ditemukan file ZIP di folder utama repository."
+            echo "Unggah CetakStrukPPOB_v3_ShareReceiver.zip ke root repository GitHub."
+            exit 1
+          fi
+
+          echo "Mengekstrak file: $ZIP_FILE"
+          unzip -q "$ZIP_FILE" -d _project
+
+          SETTINGS_FILE="$(find _project -type f \( -name settings.gradle.kts -o -name settings.gradle \) -print -quit)"
+          if [ -z "$SETTINGS_FILE" ]; then
+            echo "ERROR: ZIP berhasil dibuka, tetapi settings.gradle(.kts) tidak ditemukan."
+            echo "Periksa bahwa ZIP V3 berisi folder proyek Android."
+            exit 1
+          fi
+
+          PROJECT_DIR="$(dirname "$SETTINGS_FILE")"
+          echo "Proyek Android ditemukan: $PROJECT_DIR"
+          echo "$PROJECT_DIR" > /tmp/cetakstruk_project_dir.txt
 
       - name: Build APK
         script: |
-          PROJECT_DIR="$(dirname "$(find _project -name settings.gradle.kts -o -name settings.gradle | head -n 1)")"
+          set -eu
+          PROJECT_DIR="$(cat /tmp/cetakstruk_project_dir.txt)"
           cd "$PROJECT_DIR"
+          java -version
+          gradle --version
           gradle assembleDebug
 
     artifacts:
       - "**/app/build/outputs/apk/debug/*.apk"
+
