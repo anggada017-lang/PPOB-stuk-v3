@@ -1,0 +1,48 @@
+workflows:
+  android-debug:
+    name: CetakStrukPPOB Debug APK
+    max_build_duration: 60
+    environment:
+      java: 17
+    scripts:
+      - name: Find or extract Android project
+        script: |
+          set -eu
+
+          # If repository root does not contain settings.gradle(.kts),
+          # extract the updated project ZIP uploaded to the repository.
+          if ! find . -path './.git' -prune -o -path './.gradle' -prune -o -type f \( -name settings.gradle.kts -o -name settings.gradle \) -print -quit | grep -q .; then
+            mkdir -p _project
+            ZIP_FILE="$(find . -maxdepth 1 -type f -iname '*v2_fixed*.zip' -print -quit || true)"
+            if [ -z "$ZIP_FILE" ]; then
+              ZIP_FILE="$(find . -maxdepth 1 -type f -iname '*.zip' -print -quit || true)"
+            fi
+            if [ -z "$ZIP_FILE" ]; then
+              echo "ERROR: No settings.gradle(.kts) found and no project ZIP was found in repository root."
+              echo "Upload CetakStrukPPOB_v2_fixed.zip or upload the extracted project files."
+              exit 1
+            fi
+            echo "Extracting project archive: $ZIP_FILE"
+            unzip -q "$ZIP_FILE" -d _project
+          fi
+
+          SETTINGS_FILE="$(find . -path './.git' -prune -o -path './.gradle' -prune -o -type f \( -name settings.gradle.kts -o -name settings.gradle \) -print -quit)"
+          if [ -z "$SETTINGS_FILE" ]; then
+            echo "ERROR: Android Gradle settings file was not found."
+            exit 1
+          fi
+          PROJECT_DIR="$(dirname "$SETTINGS_FILE")"
+          echo "Android project found at: $PROJECT_DIR"
+          echo "$PROJECT_DIR" > /tmp/cetakstruk_project_dir.txt
+
+      - name: Build APK
+        script: |
+          set -eu
+          PROJECT_DIR="$(cat /tmp/cetakstruk_project_dir.txt)"
+          cd "$PROJECT_DIR"
+          java -version
+          gradle --version
+          gradle assembleDebug
+
+    artifacts:
+      - "**/app/build/outputs/apk/debug/*.apk"

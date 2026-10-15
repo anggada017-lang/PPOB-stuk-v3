@@ -1,0 +1,50 @@
+plugins {
+    id("com.android.application")
+    id("org.jetbrains.kotlin.android")
+    id("org.jetbrains.kotlin.plugin.compose")
+}
+
+android {
+    namespace = "com.angga.cetakstruk"
+    compileSdk = 35
+
+    defaultConfig {
+        applicationId = "com.angga.cetakstruk"
+        minSdk = 26
+        targetSdk = 35
+        versionCode = 3
+        versionName = "3.0"
+    }
+
+    // Java and Kotlin must target the same JVM version for a consistent build.
+    compileOptions {
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
+    }
+
+    kotlinOptions {
+        jvmTarget = "17"
+    }
+
+    buildFeatures {
+        compose = true
+    }
+
+    packaging {
+        resources.excludes += "/META-INF/{AL2.0,LGPL2.1}"
+    }
+}
+
+dependencies {
+    implementation("androidx.core:core-ktx:1.15.0")
+    implementation("androidx.activity:activity-compose:1.10.1")
+    implementation("androidx.lifecycle:lifecycle-runtime-ktx:2.8.7")
+    implementation("androidx.compose.ui:ui:1.7.8")
+    implementation("androidx.compose.ui:ui-tooling-preview:1.7.8")
+    implementation("androidx.compose.material3:material3:1.3.1")
+    implementation("androidx.navigation:navigation-compose:2.8.6")
+    implementation("org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1")
+
+    // OCR screenshot DANA/BCA/other apps
+    implementation("com.google.mlkit:text-recognition:16.0.1")
+}
